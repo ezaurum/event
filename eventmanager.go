@@ -1,10 +1,11 @@
 package common
 
-
+import "sync"
 
 type NotificationCallback func(event AppEvent) bool
 
 type Notifier struct {
+	mu sync.Mutex
 	Observer []NotificationCallback
 	Ch       chan AppEvent
 }
@@ -25,9 +26,10 @@ func (n *Notifier) Start() chan AppEvent {
 	return ch
 }
 
-//TODO thread safe
 func (n *Notifier) Subscribe(target NotificationCallback) chan AppEvent {
+	n.mu.Lock()
 	n.Observer = append(n.Observer, target)
+	n.mu.Unlock()
 	return n.Ch
 }
 
@@ -76,7 +78,9 @@ func (em *EventManger) Notify(eventName string, eventData interface{}) {
 func (em *EventManger) getNotifierInstance(eventName string) *Notifier {
 	notifier, b := em.ObserverMap[eventName]
 	if !b {
-		notifier = &Notifier{}
+		notifier = &Notifier{
+			mu:sync.Mutex{},
+		}
 		notifier.Start()
 		em.ObserverMap[eventName] = notifier
 	}
