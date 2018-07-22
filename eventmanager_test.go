@@ -4,6 +4,7 @@ import (
 	"testing"
 	"fmt"
 	"time"
+	"github.com/stretchr/testify/assert"
 )
 
 /**
@@ -21,10 +22,12 @@ func TestEventManager_Start(t *testing.T) {
 
 type ttt struct {
 	Name string
+	Events []AppEvent
 }
 
 func (t *ttt) Notify(event AppEvent) bool {
 	fmt.Printf("%v, get %v\n", t.Name, event)
+	t.Events = append(t.Events, event)
 	return true
 }
 
@@ -67,15 +70,14 @@ func TestEventManager_Observe(t *testing.T) {
 func TestEventManger_Observe(t *testing.T) {
 	em := NewEventManager()
 	test1 := ttt{
-		"Test1",
+		Name:"Test1",
 	}
 	test2 := ttt{
-		"Test2",
+		Name:"Test2",
 	}
 	test1Ch := em.Subscribe("Test1", test1.Notify)
 	test2Ch := em.Subscribe("Test2", test2.Notify)
 	test3Ch := em.Subscribe("Test3", test2.Notify)
-	em.Subscribe("Test3", test1.Notify)
 
 	test1Ch <- AppEvent{
 		Name: "Test1",
@@ -90,4 +92,9 @@ func TestEventManger_Observe(t *testing.T) {
 		Data: "WTF",
 	}
 	time.Sleep(time.Second)
+
+	assert.Equal(t, 1, len(test1.Events))
+	assert.Equal(t, 2, len(test2.Events))
+
+
 }
