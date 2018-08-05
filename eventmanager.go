@@ -50,22 +50,22 @@ func (n *Notifier) Unsubscribe(target NotificationCallback) {
 
 }*/
 
-type EventManger struct {
+type Manager struct {
 	ObserverMap map[string]*Notifier
 }
 
-func NewEventManager() *EventManger {
-	em := EventManger{
+func NewEventManager() *Manager {
+	em := Manager{
 		ObserverMap: make(map[string]*Notifier),
 	}
 	return &em
 }
-func (em *EventManger) Subscribe(eventName string, target NotificationCallback) chan AppEvent {
+func (em *Manager) Subscribe(eventName string, target NotificationCallback) chan AppEvent {
 	notifier := em.getNotifierInstance(eventName)
 	return notifier.Subscribe(target)
 }
 
-func (em *EventManger) Notify(eventName string, eventData interface{}) {
+func (em *Manager) Notify(eventName string, eventData interface{}) {
 	event := AppEvent{
 		Name: eventName,
 		Data: eventData,
@@ -75,7 +75,7 @@ func (em *EventManger) Notify(eventName string, eventData interface{}) {
 	notifier.Ch <- event
 }
 
-func (em *EventManger) getNotifierInstance(eventName string) *Notifier {
+func (em *Manager) getNotifierInstance(eventName string) *Notifier {
 	notifier, b := em.ObserverMap[eventName]
 	if !b {
 		notifier = &Notifier{
