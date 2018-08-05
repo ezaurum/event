@@ -21,7 +21,7 @@ func TestEventManager_Start(t *testing.T) {
 }
 
 type ttt struct {
-	Name string
+	Name   string
 	Events []AppEvent
 }
 
@@ -48,7 +48,8 @@ func TestEventManager_WaitEvent(t *testing.T) {
 
 func TestEventManager_Observe(t *testing.T) {
 
-	em := Notifier{}
+	eventName := "Test"
+	em := NewNotifier(0)
 	ch := em.Start()
 
 	if nil == ch {
@@ -60,7 +61,7 @@ func TestEventManager_Observe(t *testing.T) {
 	}
 	em.Subscribe(i.Notify)
 	ch <- AppEvent{
-		Name: "Test",
+		Name: eventName,
 		Data: "WTF",
 	}
 
@@ -70,14 +71,14 @@ func TestEventManager_Observe(t *testing.T) {
 func TestEventManger_Observe(t *testing.T) {
 	em := NewEventManager()
 	test1 := ttt{
-		Name:"Test1",
+		Name: "Test1",
 	}
 	test2 := ttt{
-		Name:"Test2",
+		Name: "Test2",
 	}
-	test1Ch := em.Subscribe("Test1", test1.Notify)
-	test2Ch := em.Subscribe("Test2", test2.Notify)
-	test3Ch := em.Subscribe("Test3", test2.Notify)
+	test1Ch, _ := em.Subscribe("Test1", test1.Notify)
+	test2Ch, _ := em.Subscribe("Test2", test2.Notify)
+	test3Ch, _ := em.Subscribe("Test3", test2.Notify)
 
 	test1Ch <- AppEvent{
 		Name: "Test1",
@@ -96,5 +97,30 @@ func TestEventManger_Observe(t *testing.T) {
 	assert.Equal(t, 1, len(test1.Events))
 	assert.Equal(t, 2, len(test2.Events))
 
+}
+
+func TestEventManager_Unsubscribe(t *testing.T) {
+	em := NewEventManager()
+	test1 := ttt{
+		Name: "Test1",
+	}
+	test2 := ttt{
+		Name: "Test1",
+	}
+	test1Ch, subID := em.Subscribe("Test1", test1.Notify)
+	_,_ = em.Subscribe("Test1", test2.Notify)
+	test1Ch <- AppEvent{
+		Name: "Test1",
+		Data: "WTF",
+	}
+	em.Unsubscribe("Test1", subID)
+	test1Ch <- AppEvent{
+		Name: "Test1",
+		Data: "WTF",
+	}
+
+	time.Sleep(time.Second)
+	assert.Equal(t, 1, len(test1.Events))
+	assert.Equal(t, 2, len(test2.Events))
 
 }
