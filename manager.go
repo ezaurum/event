@@ -4,7 +4,7 @@ type Manager struct {
 	ObserverMap map[string]*Notifier
 }
 
-func NewEventManager() *Manager {
+func New() *Manager {
 	em := Manager{
 		ObserverMap: make(map[string]*Notifier),
 	}

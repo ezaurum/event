@@ -69,7 +69,7 @@ func TestEventManager_Observe(t *testing.T) {
 }
 
 func TestEventManger_Observe(t *testing.T) {
-	em := NewEventManager()
+	em := New()
 	test1 := ttt{
 		Name: "Test1",
 	}
@@ -100,7 +100,7 @@ func TestEventManger_Observe(t *testing.T) {
 }
 
 func TestEventManager_Unsubscribe(t *testing.T) {
-	em := NewEventManager()
+	em := New()
 	test1 := ttt{
 		Name: "Test1",
 	}
