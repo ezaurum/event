@@ -13,10 +13,11 @@ type Notifier struct {
 	Observer  map[int64]NotificationCallback
 	Ch        chan AppEvent
 	generator generators.IDGenerator
+	buffer    int
 }
 
 func (n *Notifier) Start() chan AppEvent {
-	ch := make(chan AppEvent)
+	ch := make(chan AppEvent, n.buffer)
 	n.Ch = ch
 	go func() {
 		for {
@@ -45,10 +46,11 @@ func (n *Notifier) Unsubscribe(key int64) {
 	}
 }
 
-func NewNotifier(nodeNumber int64) *Notifier {
+func NewNotifier(nodeNumber int64, buffer int) *Notifier {
 	return &Notifier{
 		mu:        sync.Mutex{},
 		generator: snowflake.New(nodeNumber),
 		Observer:  make(map[int64]NotificationCallback),
+		buffer:    buffer,
 	}
 }
