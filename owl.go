@@ -36,7 +36,6 @@ func (n *Notifier) Start() chan Event {
 func (n *Notifier) Subscribe(target NotificationCallback) (chan Event, int64) {
 	n.mu.Lock()
 	key := n.generator.GenerateInt64()
-	//fmt.Printf("subscribe %d %p\n",key, target )
 	n.observer[key] = target
 	n.mu.Unlock()
 	return n.Ch, key
