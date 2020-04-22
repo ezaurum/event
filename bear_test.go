@@ -1,4 +1,4 @@
-package event
+package owlbear
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -22,11 +22,11 @@ func TestEventManager_Start(t *testing.T) {
 
 type ttt struct {
 	Name   string
-	Events []AppEvent
+	Events []Event
 	wg     *sync.WaitGroup
 }
 
-func (t *ttt) OnNotified(event AppEvent) bool {
+func (t *ttt) OnNotified(event Event) bool {
 	t.Events = append(t.Events, event)
 	if t.wg != nil  {
 		t.wg.Done()
@@ -43,7 +43,7 @@ func TestEventManager_WaitEvent(t *testing.T) {
 		t.Fail()
 	}
 
-	ch <- AppEvent{
+	ch <- Event{
 		Name: "Test",
 		Data: "WTF",
 	}
@@ -63,7 +63,7 @@ func TestEventManager_Observe(t *testing.T) {
 		Name: "ttdfs",
 	}
 	em.Subscribe(i.OnNotified)
-	ch <- AppEvent{
+	ch <- Event{
 		Name: eventName,
 		Data: "WTF",
 	}
@@ -90,15 +90,15 @@ func TestEventManger_Observe(t *testing.T) {
 	test3Ch, _ := em.Subscribe("Test3", test2.OnNotified)
 
 	wg.Add(4)
-	test1Ch <- AppEvent{
+	test1Ch <- Event{
 		Name: "Test1",
 		Data: "WTF",
 	}
-	test2Ch <- AppEvent{
+	test2Ch <- Event{
 		Name: "Test2",
 		Data: "WTF",
 	}
-	test3Ch <- AppEvent{
+	test3Ch <- Event{
 		Name: "Test3",
 		Data: "WTF",
 	}
@@ -125,7 +125,7 @@ func TestEventManager_Unsubscribe(t *testing.T) {
 	test1Ch, subID := em.Subscribe(eventName, test1.OnNotified)
 	_, _ = em.Subscribe(eventName, test2.OnNotified)
 	wg.Add(2)
-	test1Ch <- AppEvent{
+	test1Ch <- Event{
 		Name: eventName,
 		Data: "WTF",
 	}
@@ -136,7 +136,7 @@ func TestEventManager_Unsubscribe(t *testing.T) {
 
 	wg.Add(1)
 	em.Unsubscribe(eventName, subID)
-	test1Ch <- AppEvent{
+	test1Ch <- Event{
 		Name: eventName,
 		Data: "WTF2",
 	}

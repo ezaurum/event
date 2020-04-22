@@ -1,4 +1,4 @@
-package event
+package owlbear
 
 import (
 	"github.com/ezaurum/cthulthu/generators"
@@ -6,18 +6,19 @@ import (
 	"sync"
 )
 
-type NotificationCallback func(event AppEvent) bool
+type NotificationCallback func(event Event) bool
 
+// owl
 type Notifier struct {
 	mu        sync.Mutex
 	observer  map[int64]NotificationCallback
-	Ch        chan AppEvent
+	Ch        chan Event
 	generator generators.IDGenerator
 	buffer    int
 }
 
-func (n *Notifier) Start() chan AppEvent {
-	ch := make(chan AppEvent, n.buffer)
+func (n *Notifier) Start() chan Event {
+	ch := make(chan Event, n.buffer)
 	n.Ch = ch
 	go func() {
 		for {
@@ -32,7 +33,7 @@ func (n *Notifier) Start() chan AppEvent {
 	return ch
 }
 
-func (n *Notifier) Subscribe(target NotificationCallback) (chan AppEvent, int64) {
+func (n *Notifier) Subscribe(target NotificationCallback) (chan Event, int64) {
 	n.mu.Lock()
 	key := n.generator.GenerateInt64()
 	//fmt.Printf("subscribe %d %p\n",key, target )

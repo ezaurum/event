@@ -1,7 +1,8 @@
-package event
+package owlbear
 
 import "sync"
 
+// bear
 type NotifierMap struct {
 	mu        sync.Mutex
 	notifierMap map[string]*Notifier
@@ -13,13 +14,13 @@ func New() *NotifierMap {
 	}
 	return &em
 }
-func (em *NotifierMap) Subscribe(eventName string, target NotificationCallback) (chan AppEvent, int64) {
+func (em *NotifierMap) Subscribe(eventName string, target NotificationCallback) (chan Event, int64) {
 	notifier := em.getNotifierInstance(eventName)
 	return notifier.Subscribe(target)
 }
 
 func (em *NotifierMap) Notify(eventName string, eventData interface{}) {
-	event := AppEvent{
+	event := Event{
 		Name: eventName,
 		Data: eventData,
 	}
