@@ -1,16 +1,16 @@
 package event
 
 import (
-	"sync"
 	"github.com/ezaurum/cthulthu/generators"
 	"github.com/ezaurum/cthulthu/generators/snowflake"
+	"sync"
 )
 
 type NotificationCallback func(event AppEvent) bool
 
 type Notifier struct {
 	mu        sync.Mutex
-	Observer  map[int64]NotificationCallback
+	observer  map[int64]NotificationCallback
 	Ch        chan AppEvent
 	generator generators.IDGenerator
 	buffer    int
@@ -22,7 +22,7 @@ func (n *Notifier) Start() chan AppEvent {
 	go func() {
 		for {
 			ev := <-ch
-			for _, ob := range n.Observer {
+			for _, ob := range n.observer {
 				if !ob(ev) {
 					break
 				}
@@ -35,22 +35,28 @@ func (n *Notifier) Start() chan AppEvent {
 func (n *Notifier) Subscribe(target NotificationCallback) (chan AppEvent, int64) {
 	n.mu.Lock()
 	key := n.generator.GenerateInt64()
-	n.Observer[key] = target
+	//fmt.Printf("subscribe %d %p\n",key, target )
+	n.observer[key] = target
 	n.mu.Unlock()
 	return n.Ch, key
 }
 
 func (n *Notifier) Unsubscribe(key int64) {
-	if _, b := n.Observer[key]; b {
-		delete(n.Observer, key)
+	n.mu.Lock()
+	if _, b := n.observer[key]; b {
+		delete(n.observer, key)
 	}
+	n.mu.Unlock()
 }
 
 func NewNotifier(nodeNumber int64, buffer int) *Notifier {
+	if buffer < 0 {
+		// 자동 설정
+		buffer = 10
+	}
 	return &Notifier{
-		mu:        sync.Mutex{},
 		generator: snowflake.New(nodeNumber),
-		Observer:  make(map[int64]NotificationCallback),
+		observer:  make(map[int64]NotificationCallback),
 		buffer:    buffer,
 	}
 }

@@ -1,21 +1,24 @@
 package event
 
-type Manager struct {
-	ObserverMap map[string]*Notifier
+import "sync"
+
+type NotifierMap struct {
+	mu        sync.Mutex
+	notifierMap map[string]*Notifier
 }
 
-func New() *Manager {
-	em := Manager{
-		ObserverMap: make(map[string]*Notifier),
+func New() *NotifierMap {
+	em := NotifierMap{
+		notifierMap: make(map[string]*Notifier),
 	}
 	return &em
 }
-func (em *Manager) Subscribe(eventName string, target NotificationCallback) (chan AppEvent, int64) {
+func (em *NotifierMap) Subscribe(eventName string, target NotificationCallback) (chan AppEvent, int64) {
 	notifier := em.getNotifierInstance(eventName)
 	return notifier.Subscribe(target)
 }
 
-func (em *Manager) Notify(eventName string, eventData interface{}) {
+func (em *NotifierMap) Notify(eventName string, eventData interface{}) {
 	event := AppEvent{
 		Name: eventName,
 		Data: eventData,
@@ -25,17 +28,19 @@ func (em *Manager) Notify(eventName string, eventData interface{}) {
 	notifier.Ch <- event
 }
 
-func (em *Manager) getNotifierInstance(eventName string) *Notifier {
-	notifier, b := em.ObserverMap[eventName]
+func (em *NotifierMap) getNotifierInstance(eventName string) *Notifier {
+	em.mu.Lock()
+	notifier, b := em.notifierMap[eventName]
 	if !b {
-		notifier = NewNotifier(int64(len(eventName)), 100)
+		notifier = NewNotifier(int64(len(eventName)), 0)
 		notifier.Start()
-		em.ObserverMap[eventName] = notifier
+		em.notifierMap[eventName] = notifier
 	}
+	em.mu.Unlock()
 	return notifier
 }
 
-func (em *Manager) Unsubscribe(eventName string, subID int64) {
+func (em *NotifierMap) Unsubscribe(eventName string, subID int64) {
 	notifier := em.getNotifierInstance(eventName)
 	notifier.Unsubscribe(subID)
 }
